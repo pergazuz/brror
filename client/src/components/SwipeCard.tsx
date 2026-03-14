@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MapPin, Calendar, Info } from 'lucide-react';
 import { Profile, LocationShare } from '../types';
 import LocationMap from './LocationMap';
@@ -12,10 +12,14 @@ interface SwipeCardProps {
   onSwipe: (direction: 'left' | 'right' | 'super') => void;
 }
 
-export default function SwipeCard({ match }: SwipeCardProps) {
+export default function SwipeCard({ match, onSwipe }: SwipeCardProps) {
   const { profile, location, distance } = match;
   const [showDetails, setShowDetails] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const calculateAge = (birthDate: string) => {
     const today = new Date();
@@ -33,10 +37,121 @@ export default function SwipeCard({ match }: SwipeCardProps) {
     ? profile.photos 
     : ['https://via.placeholder.com/400x600?text=No+Photo'];
 
+  // Handle drag start
+  const handleDragStart = (clientX: number, clientY: number) => {
+    if (showDetails) return;
+    setDragStart({ x: clientX, y: clientY });
+    setIsDragging(true);
+  };
+
+  // Handle drag move
+  const handleDragMove = (clientX: number, clientY: number) => {
+    if (!dragStart || !isDragging || showDetails) return;
+    
+    const deltaX = clientX - dragStart.x;
+    const deltaY = clientY - dragStart.y;
+    setDragOffset({ x: deltaX, y: deltaY });
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    if (!isDragging || showDetails) return;
+    
+    const threshold = 100;
+    
+    if (Math.abs(dragOffset.x) > threshold) {
+      // Swipe left or right
+      if (dragOffset.x > 0) {
+        onSwipe('right');
+      } else {
+        onSwipe('left');
+      }
+    }
+    
+    // Reset
+    setDragStart(null);
+    setDragOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  // Mouse events
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleDragStart(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    handleDragMove(e.clientX, e.clientY);
+  };
+
+  const handleMouseUp = () => {
+    handleDragEnd();
+  };
+
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleDragStart(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleDragMove(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchEnd = () => {
+    handleDragEnd();
+  };
+
+  // Calculate rotation and opacity based on drag
+  const rotation = dragOffset.x / 20;
+  const opacity = 1 - Math.abs(dragOffset.x) / 300;
+
+  // Reset photo index when match changes
+  useEffect(() => {
+    setCurrentPhotoIndex(0);
+    setShowDetails(false);
+  }, [match.profile.id]);
+
   return (
-    <div className="relative w-full max-w-sm h-[600px] card-shadow rounded-2xl overflow-hidden bg-white">
+    <div 
+      ref={cardRef}
+      className="relative w-full max-w-sm h-[600px] card-shadow rounded-2xl overflow-hidden bg-white select-none"
+      style={{
+        transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg)`,
+        opacity: opacity,
+        transition: isDragging ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
+        cursor: isDragging ? 'grabbing' : 'grab',
+      }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Photo Carousel */}
       <div className="relative h-full">
+        {/* Swipe indicators */}
+        {isDragging && (
+          <>
+            {dragOffset.x > 50 && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                <div className="bg-green-500 text-white px-8 py-4 rounded-lg text-2xl font-bold border-4 border-white shadow-lg rotate-12">
+                  LIKE
+                </div>
+              </div>
+            )}
+            {dragOffset.x < -50 && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                <div className="bg-red-500 text-white px-8 py-4 rounded-lg text-2xl font-bold border-4 border-white shadow-lg -rotate-12">
+                  NOPE
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
         <img
           src={photos[currentPhotoIndex]}
           alt={profile.name}
@@ -61,12 +176,18 @@ export default function SwipeCard({ match }: SwipeCardProps) {
         {photos.length > 1 && (
           <>
             <div
-              className="absolute left-0 top-0 bottom-0 w-1/3 cursor-pointer"
-              onClick={() => setCurrentPhotoIndex(Math.max(0, currentPhotoIndex - 1))}
+              className="absolute left-0 top-0 bottom-0 w-1/3 cursor-pointer z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentPhotoIndex(Math.max(0, currentPhotoIndex - 1));
+              }}
             />
             <div
-              className="absolute right-0 top-0 bottom-0 w-1/3 cursor-pointer"
-              onClick={() => setCurrentPhotoIndex(Math.min(photos.length - 1, currentPhotoIndex + 1))}
+              className="absolute right-0 top-0 bottom-0 w-1/3 cursor-pointer z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentPhotoIndex(Math.min(photos.length - 1, currentPhotoIndex + 1));
+              }}
             />
           </>
         )}
@@ -89,8 +210,11 @@ export default function SwipeCard({ match }: SwipeCardProps) {
               )}
             </div>
             <button
-              onClick={() => setShowDetails(!showDetails)}
-              className="bg-white/20 backdrop-blur-sm rounded-full p-2 hover:bg-white/30 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDetails(!showDetails);
+              }}
+              className="bg-white/20 backdrop-blur-sm rounded-full p-2 hover:bg-white/30 transition-colors z-10 relative"
             >
               <Info size={24} />
             </button>
@@ -120,7 +244,10 @@ export default function SwipeCard({ match }: SwipeCardProps) {
         <div className="absolute inset-0 bg-white overflow-y-auto">
           <div className="p-6">
             <button
-              onClick={() => setShowDetails(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDetails(false);
+              }}
               className="mb-4 text-gray-600 hover:text-gray-800"
             >
               ← Back

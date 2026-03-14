@@ -8,6 +8,7 @@ import { Message, Profile, LocationShare } from '../types';
 import toast from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
 import LocationMap from '../components/LocationMap';
+import { generateAIResponse } from '../services/mistralService';
 
 export default function Chat() {
   const { matchId } = useParams();
@@ -91,25 +92,50 @@ export default function Chat() {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || !matchId) return;
+    if (!newMessage.trim() || !user || !matchId || !otherProfile) return;
 
+    const userMessageContent = newMessage.trim();
     setSending(true);
+    
     try {
+      // Send user's message
       const { data, error } = await mockApi.messages.create({
         match_id: matchId,
         sender_id: user.id,
-        content: newMessage.trim(),
+        content: userMessageContent,
         read: false,
       });
 
       if (error) throw error;
 
-      // Add message to local state immediately
+      // Add user message to local state immediately
       if (data) {
         setMessages(prev => [...prev, data]);
       }
 
       setNewMessage('');
+
+      // Generate AI response from the matched profile
+      setTimeout(async () => {
+        try {
+          const aiResponse = await generateAIResponse(userMessageContent, otherProfile);
+          
+          // Send AI response as the other user
+          const { data: aiMessageData, error: aiError } = await mockApi.messages.create({
+            match_id: matchId,
+            sender_id: otherProfile.user_id,
+            content: aiResponse,
+            read: false,
+          });
+
+          if (!aiError && aiMessageData) {
+            setMessages(prev => [...prev, aiMessageData]);
+          }
+        } catch (aiError) {
+          console.error('Error generating AI response:', aiError);
+        }
+      }, 1000 + Math.random() * 2000); // Random delay 1-3 seconds for realism
+
     } catch (error: any) {
       toast.error('Failed to send message');
       console.error('Error sending message:', error);
