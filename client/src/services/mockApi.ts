@@ -6,19 +6,18 @@ import {
   mockMatches,
   mockMessages,
   currentUser,
-  currentProfile,
   setCurrentUser,
   addSwipe,
   addMessage,
 } from './mockData';
-import { Profile, LocationShare, Match, Message, Swipe } from '../types';
+import { Profile, LocationShare, Message, Swipe } from '../types';
 
 // Simulate API delay
 const delay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const mockApi = {
   auth: {
-    signUp: async (email: string, password: string) => {
+    signUp: async (email: string, _password: string) => {
       await delay();
       const newUser = {
         id: `user-${Date.now()}`,
@@ -29,7 +28,7 @@ export const mockApi = {
       return { user: newUser, error: null };
     },
 
-    signIn: async (email: string, password: string) => {
+    signIn: async (email: string, _password: string) => {
       await delay();
       const user = mockUsers.find(u => u.email === email);
       if (user) {

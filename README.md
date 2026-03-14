@@ -2,6 +2,27 @@
 
 A modern dating app clone with a unique 24-hour location sharing feature.
 
+## 🚀 Quick Deploy to AWS
+
+Deploy your app to production in minutes:
+
+### Option 1: AWS CDK (Recommended)
+```bash
+cd cdk
+./deploy.sh
+```
+
+### Option 2: AWS CLI Scripts
+```bash
+./deploy/aws-setup.sh
+cd client && npm run build && cd ..
+./deploy/deploy.sh
+```
+
+[📖 See Full Deployment Guide →](QUICK-START.md)
+
+---
+
 ## Features
 
 - 🔐 **Secure Authentication** - Email/password and social login

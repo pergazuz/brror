@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, MapPin } from 'lucide-react';
 import { mockApi } from '../services/mockApi';
-import { mockProfiles, mockLocationShares, mockMessages } from '../services/mockData';
+import { mockProfiles, mockLocationShares } from '../services/mockData';
 import { useAuthStore } from '../store/authStore';
 import { Message, Profile, LocationShare } from '../types';
 import toast from 'react-hot-toast';

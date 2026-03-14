@@ -15,7 +15,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { user, error } = await mockApi.auth.signIn(email, password);
+      const { error } = await mockApi.auth.signIn(email, password);
 
       if (error) throw error;
 

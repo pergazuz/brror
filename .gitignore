@@ -16,6 +16,17 @@ client/.env.local
 # AWS deployment config (contains sensitive info)
 deploy/aws-config.env
 
+# CDK
+cdk/node_modules/
+cdk/cdk.out/
+cdk/.cdk.staging/
+cdk/*.js
+cdk/*.d.ts
+cdk/lib/*.js
+cdk/lib/*.d.ts
+cdk/bin/*.js
+cdk/bin/*.d.ts
+
 # Logs
 *.log
 npm-debug.log*
