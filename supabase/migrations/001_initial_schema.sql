@@ -16,6 +16,24 @@ CREATE TABLE profiles (
   max_distance INTEGER DEFAULT 50,
   age_min INTEGER DEFAULT 18,
   age_max INTEGER DEFAULT 99,
+  
+  -- Extended profile fields
+  height INTEGER, -- in cm
+  education VARCHAR(100),
+  job_title VARCHAR(100),
+  company VARCHAR(100),
+  school VARCHAR(100),
+  city VARCHAR(100),
+  relationship_goal VARCHAR(20) CHECK (relationship_goal IN ('casual', 'relationship', 'friendship', 'not_sure')),
+  languages TEXT[] DEFAULT '{}',
+  zodiac_sign VARCHAR(20),
+  exercise VARCHAR(20) CHECK (exercise IN ('active', 'sometimes', 'never')),
+  drinking VARCHAR(20) CHECK (drinking IN ('yes', 'socially', 'no')),
+  smoking VARCHAR(20) CHECK (smoking IN ('yes', 'socially', 'no')),
+  pets TEXT[] DEFAULT '{}',
+  religion VARCHAR(50),
+  political_views VARCHAR(50),
+  
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

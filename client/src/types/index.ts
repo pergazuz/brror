@@ -17,6 +17,24 @@ export interface Profile {
   max_distance: number;
   age_min: number;
   age_max: number;
+  
+  // Extended profile fields
+  height?: number; // in cm
+  education?: string;
+  job_title?: string;
+  company?: string;
+  school?: string;
+  city?: string;
+  relationship_goal?: 'casual' | 'relationship' | 'friendship' | 'not_sure';
+  languages?: string[];
+  zodiac_sign?: string;
+  exercise?: 'active' | 'sometimes' | 'never';
+  drinking?: 'yes' | 'socially' | 'no';
+  smoking?: 'yes' | 'socially' | 'no';
+  pets?: string[];
+  religion?: string;
+  political_views?: string;
+  
   created_at: string;
   updated_at: string;
 }
